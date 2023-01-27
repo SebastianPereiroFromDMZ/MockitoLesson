@@ -61,7 +61,8 @@ class AdviceServiceTests {
 
 
         PreferencesService preferencesService = Mockito.mock(PreferencesService.class);
-        Mockito.when(preferencesService.get("Петя"))
+        Mockito.when(preferencesService.get("Петя"))//Mockito.any() можно подставить метод для всех,
+                // для какого то типа ну или как в нашем случае только для кого то
                 .thenReturn(Set.of(Preference.FOOTBALL, Preference.READING, Preference.WATCHING_FILMS));
 
 
@@ -74,4 +75,37 @@ class AdviceServiceTests {
         Assertions.assertEquals(expected, preferences);
     }
 
+
+    //Тест и для моков и дли шпионов(СПАЙ)
+    //Mockito verify
+    @Test
+    void test_get_advice_in_bad_weather_mockito_verify(){
+        //здесь мы просто проверяем сколько раз и с какими параметрами вызвались методы в тестируюем классе АдвайсесСервис методы
+        // currentWeather() и get(userId), это динственный способ протестировать метод который возвращает войд, другие вариаты мы уже не протестируем.
+        // Мы можем посмотреть был ли вызов какойто зависимости или не был, если зависимость была под ИФом мы можем понятькакая ветка кода отработала
+
+        //arrange
+        WeatherService weatherService = Mockito.mock(WeatherService.class);//говорим вот у нас есть обьект
+        Mockito.when(weatherService.currentWeather()).thenReturn(Weather.STORMY);//и он возвращает плохую погоду
+
+        PreferencesService preferencesService = Mockito.mock(PreferencesService.class);//далее создаем второй обьект
+        Mockito.when(preferencesService.get(Mockito.any())).thenReturn(Set.of(Preference.FOOTBALL));//конфигурируем что бы он возвращал футбол.
+        // В принципе нам не важно что он возвращает потому что мы в этом тесте не будем проверять возвращаемые обьекты,
+        // МЫ БУДЕМ ПРОВЕРЯТЬ СКОЛЬКО РАЗ КАКОЙ МЕТОД ЗАГЛУШКИ ВЫЗВАЛСЯ
+
+        AdviceService adviceService = new AdviceService(preferencesService, weatherService);
+
+        //act
+        adviceService.getAdvice("user1");
+        adviceService.getAdvice("user1");
+
+        //assert
+        Mockito.verify(preferencesService, Mockito.times(2)).get("user1");
+        Mockito.verify(preferencesService, Mockito.times(0)).get("user2");//у мокито есть метод верифай который как раз позволяет
+        // проверить сколько раз вызывался тоот или иной метод заглушки, при этом точно так жекак и в случае конфигурации возвращаемых значаний так же
+        // есть привязка к параметрам. Что бы проверить сколько раз вызывался метод гетПреференсСервиса, мы должны написать МокитоВерифайПреференсСервис
+        // и указать переменную мокито таймс(ожидаемое количество раз), далее идет гет, но в этом случае гет это не получение значения,
+        // а наоборот мы даем параметр к которому будет применен выше описанный метод.
+        // Соответственно мы задаем в верифай для юзера1 что метод гетПреференсСервис вызывался 1 раз, а для юзера2 0 раз(так как мы вообще его не забили)
+    }
 }
