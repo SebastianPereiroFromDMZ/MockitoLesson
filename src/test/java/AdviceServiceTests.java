@@ -51,12 +51,20 @@ class AdviceServiceTests {
         WeatherService weatherService = Mockito.mock(WeatherService.class);//собственно создание заглушки производится методом Мокито.мок.
         // Мокито это импортируемый обьект из библиотеки мокито, мок это статический метод этого обьекта, и ме передаем в параметрах
         // тип обьекта того класса которого хотим заглушку
-//        Mockito.when(weatherService.currentWeather())//создали заглушку, однако сам мок не знает что возвращать и возвращает какието обьекты по умолчанию:
-//                // пустые обьекты, поэтому ему надо указать что возвращать
-//                .thenReturn(Weather.STORMY);
+        Mockito.when(weatherService.currentWeather())//создали заглушку, однако сам мок не знает что возвращать и возвращает какието обьекты по умолчанию:
+                // пустые обьекты, поэтому ему надо указать что возвращать, конфигурация заглушки производится с помощью методов when и thenReturn.
+                // Соответсятвенно в when мы передаем метод, который мы хотим конфигурировать, а в thenReturn значение которое должно возвращатся.
+                // Собственно вот эти три строчки кода заменяют 2 строчки кода из теста из предыдущего примера плюс
+                // ПОЛНОСТЬЮ ИНТЕРФЕЙС который имплементируют те заглушки. И это еще не самый главный плюс,
+                // главное теперь мы не зависим от изменений в этих интерфейсах)
+                .thenReturn(Weather.STORMY);
+
+
         PreferencesService preferencesService = Mockito.mock(PreferencesService.class);
         Mockito.when(preferencesService.get("Петя"))
                 .thenReturn(Set.of(Preference.FOOTBALL, Preference.READING, Preference.WATCHING_FILMS));
+
+
         AdviceService adviceService = new AdviceService(preferencesService, weatherService);
 
         //act
