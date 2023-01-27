@@ -1,5 +1,6 @@
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.util.Set;
 
@@ -7,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AdviceServiceTests {
 
+    //wits our mocks (тест без мокито)
     @Test
     public  void test_get_advice_in_bad_weather(){
         //arrange
@@ -29,6 +31,39 @@ class AdviceServiceTests {
         //assert
         Assertions.assertEquals(expected, preferences);
 
-        //итак у нас нет реализации но мы уверенны что АдвайсСервис отработает на любой реализации, нам не важно где метод везеСервис будет брать данные, из интернета , нам не важно где преференс сервис будет доставать предпочтения пользователя например опять таки из базы данных
+        //итак у нас нет реализации но мы уверенны что АдвайсСервис отработает на любой реализации, нам не важно где метод
+        // везеСервис будет брать данные, из интернета , нам не важно где преференс сервис будет доставать предпочтения пользователя
+        // например опять таки из базы данных, какой плюс у такого подхода? во первых нам не нужны никакие зависимости.
+        // Никакой логико в заглушках нет это просто заглушка, в чем минус такого подхода, мы уже разбирались что тесты
+        // должны быть устойчивы к рефрактенгу(переработке), если мы изменяем интерфейс одного из сервисов, нам придется
+        // переписывать еще и заглушки. Каким образом мы можем этого избежать? Было бы здорово что бы у нас была библиотека,
+        // которая умеет генерировать эти заглушки автоматически, тогда наши тесты будут устойчивы к рефракторингу, и заглушки тоже.
+        // Так вот как раз этот функционал предоставляет библиотека мокито
     }
+
+    //test with mockito
+    @Test
+    void test_get_advice_in_bad_weather_mockito(){
+        //arrange
+
+        Set<Preference> expected = Set.of(Preference.READING, Preference.WATCHING_FILMS);//ожидаемый результат
+
+        WeatherService weatherService = Mockito.mock(WeatherService.class);//собственно создание заглушки производится методом Мокито.мок.
+        // Мокито это импортируемый обьект из библиотеки мокито, мок это статический метод этого обьекта, и ме передаем в параметрах
+        // тип обьекта того класса которого хотим заглушку
+//        Mockito.when(weatherService.currentWeather())//создали заглушку, однако сам мок не знает что возвращать и возвращает какието обьекты по умолчанию:
+//                // пустые обьекты, поэтому ему надо указать что возвращать
+//                .thenReturn(Weather.STORMY);
+        PreferencesService preferencesService = Mockito.mock(PreferencesService.class);
+        Mockito.when(preferencesService.get("Петя"))
+                .thenReturn(Set.of(Preference.FOOTBALL, Preference.READING, Preference.WATCHING_FILMS));
+        AdviceService adviceService = new AdviceService(preferencesService, weatherService);
+
+        //act
+        Set<Preference> preferences = adviceService.getAdvice("Петя");
+
+        //assert
+        Assertions.assertEquals(expected, preferences);
+    }
+
 }
