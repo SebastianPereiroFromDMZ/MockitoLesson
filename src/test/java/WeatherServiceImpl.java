@@ -26,6 +26,8 @@ public class WeatherServiceImpl implements WeatherService {
 
         Assertions.assertEquals(Weather.STORMY, weatherService.currentWeather());//и теперь дальше мы сравниваем со штормом
 
-        //Mockito.verify(weatherService, Mockito.only()).currentWeather();
+        Mockito.verify(weatherService, Mockito.only()).currentWeather();//так же можно проверить сколько раз вызывался метод,
+        // можно таким образом,мокитоОнли это СИНТАКСИЧЕСКИЙ САХАР для мокитоТаймс 1
+        Mockito.verify(weatherService, Mockito.times(1)).currentWeather();//а можно так
     }
 }

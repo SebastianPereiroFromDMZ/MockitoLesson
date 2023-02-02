@@ -1,5 +1,6 @@
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import java.util.Set;
@@ -9,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class AdviceServiceTests {
 
     //wits our mocks (тест без мокито)
+    //самописная заглушка
     @Test
     public  void test_get_advice_in_bad_weather(){
         //arrange
@@ -78,6 +80,7 @@ class AdviceServiceTests {
 
     //Тест и для моков и дли шпионов(СПАЙ)
     //Mockito verify
+    //сколько вызывался тот или тной метод
     @Test
     void test_get_advice_in_bad_weather_mockito_verify(){
         //здесь мы просто проверяем сколько раз и с какими параметрами вызвались методы в тестируюем классе АдвайсесСервис методы
@@ -98,14 +101,47 @@ class AdviceServiceTests {
         //act
         adviceService.getAdvice("user1");
         adviceService.getAdvice("user1");
+        adviceService.getAdvice("user2");
 
         //assert
         Mockito.verify(preferencesService, Mockito.times(2)).get("user1");
-        Mockito.verify(preferencesService, Mockito.times(0)).get("user2");//у мокито есть метод верифай который как раз позволяет
+        Mockito.verify(preferencesService, Mockito.times(1)).get("user2");
+        Mockito.verify(preferencesService, Mockito.times(3)).get(Mockito.any());//общий
+        //у мокито есть метод верифай который как раз позволяет
         // проверить сколько раз вызывался тоот или иной метод заглушки, при этом точно так жекак и в случае конфигурации возвращаемых значаний так же
         // есть привязка к параметрам. Что бы проверить сколько раз вызывался метод гетПреференсСервиса, мы должны написать МокитоВерифайПреференсСервис
         // и указать переменную мокито таймс(ожидаемое количество раз), далее идет гет, но в этом случае гет это не получение значения,
         // а наоборот мы даем параметр к которому будет применен выше описанный метод.
         // Соответственно мы задаем в верифай для юзера1 что метод гетПреференсСервис вызывался 1 раз, а для юзера2 0 раз(так как мы вообще его не забили)
     }
+
+    //если хотим проверить параметры то для этого надо использовать другой функционал вместе с верифай можно использовать перехватчик аргументов
+    //Mockito Argument Captor проверяем параметр с тем каким вызывался метод
+    //
+    @Test
+    void test_get_advice_in_bad_weather_mockito_argument_captor(){
+        //arrange
+        WeatherService weatherService = Mockito.mock(WeatherService.class);//нам без разницы опять что будет возвращатся мы будем тестировать другие моменты. Мы будем перехватывать аргумент и будем сравнивать его с ожидаемым
+        Mockito.when(weatherService.currentWeather()).thenReturn(Weather.STORMY);
+        PreferencesService preferencesService = Mockito.mock(PreferencesService.class);
+        Mockito.when(preferencesService.get(Mockito.any())).thenReturn(Set.of(Preference.FOOTBALL));
+
+        ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);//для перехвата потребуется обьект аргументаКэпчур,
+        // он дженерик, перехватывает строковый параметр. Этот обьект приравниваем к строковому с помощью метода форКласс.
+
+        AdviceService adviceService = new AdviceService(preferencesService, weatherService);
+
+        //act
+        adviceService.getAdvice("user1");
+
+        //assert
+        Mockito.verify(preferencesService).get(argumentCaptor.capture());//в предыдущем примере мы через метод верифай передавали какое то значение,
+        // то здесь мы точно также передаем аргумент кэпчур, ГЕТ это метод из преференс сервис и в параметре мы отправляем аргумент
+        // кэпчур причом обязательно с вызовом метода кэпчур, если мы этот метод не пропишем перехвата параметра не произойдет.
+        // После того как этот метод отработает:
+        Assertions.assertEquals("user1", argumentCaptor.getValue());//будет сохранено значение в котором был вызван метод.
+        // Соответсвенно так кам метод был вызван с юзера1, в ассерте будем проверять ожидаемое значение (юзер1) с тем кторое перехватил перехватчик
+    }
+
+    //ВСЯ ЛОГИКА ТЕСТА ДОЛЖНА БЫТЬ В ТЕСТЕ, не нужно создовать сторонние классы
 }
